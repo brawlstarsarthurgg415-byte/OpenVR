@@ -222,6 +222,7 @@ addCaptured.onclick=()=>{
   const smooth=window.OpenVR.aimSmooth||(window.OpenVR.aimSmooth={x:.5,y:.5});
   smooth.x+=(aimX-smooth.x)*.28;smooth.y+=(aimY-smooth.y)*.28;
   const x=smooth.x*r.width,y=smooth.y*r.height;
+  aimBadge.textContent=cal.ready?"MIRA: ORIENTAÇÃO DA MÃO ATIVA":"MIRA: CALIBRANDO MÃO…";
   lastPoint={x,y};cursor.style.display="block";cursor.style.left=x+"px";cursor.style.top=y+"px";
   const dist=Math.hypot(tip.x-thumb.x,tip.y-thumb.y),pinching=dist<.055;
   cursor.classList.toggle("pinching",pinching);
@@ -262,6 +263,7 @@ window.OpenVR.launchImmersive = function(){
  badge.className="controller-status";
  badge.textContent="CONTROLES: aguardando";
  stage.append(badge);
+ const aimBadge=document.createElement("div");aimBadge.className="aim-status";aimBadge.textContent="MIRA: AGUARDANDO MÃO";stage.append(aimBadge);
  const setBadge=(text,connected)=>{badge.textContent=text;badge.classList.toggle("connected",!!connected)};
  const button=(gp,i)=>!!gp.buttons?.[i]?.pressed;
  const edge=(gp,i)=>button(gp,i)&&!(previous.get(gp.index)||[])[i];
