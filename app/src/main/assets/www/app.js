@@ -18,4 +18,24 @@ $("leave").onclick=()=>{if(socket)socket.close();socket=null;clearInterval(poll)
 async function test(){try{await api("/health");$("statusText").textContent="Servidor conectado";$("statusDot").parentElement.classList.add("online");$("settingsMessage").textContent="Servidor respondeu normalmente."}catch(e){$("statusText").textContent="Servidor indisponível";$("statusDot").parentElement.classList.remove("online");$("settingsMessage").textContent="Não conectou: "+e.message}}
 $("test").onclick=test;$("serverUrl").value=apiBase;$("serverUrl").onchange=()=>{apiBase=$("serverUrl").value.trim();localStorage.setItem("openvr_api",apiBase);test()};
 $("settingsName").value=player;$("playerName").value=player;$("profile").textContent=player[0].toUpperCase();$("settingsName").onchange=()=>{player=$("settingsName").value.trim()||"Jogador";localStorage.setItem("openvr_name",player);$("playerName").value=player;$("profile").textContent=player[0].toUpperCase()};$("profile").onclick=()=>{openPage("settings");$("settingsName").focus()};
+
+let viewerMode=localStorage.getItem("openvr_viewer_mode")||"normal";
+function setViewerMode(mode){
+ viewerMode=mode;localStorage.setItem("openvr_viewer_mode",mode);
+ $("vrStage").classList.toggle("headset-mode",mode==="headset");
+ $("vrStage").classList.toggle("normal-mode",mode==="normal");
+ $("modeNormal").classList.toggle("selected",mode==="normal");
+ $("modeHeadset").classList.toggle("selected",mode==="headset");
+ $("modeNormal").setAttribute("aria-pressed",String(mode==="normal"));
+ $("modeHeadset").setAttribute("aria-pressed",String(mode==="headset"));
+ $("viewerNote").textContent=mode==="headset"?"Óculos personalizado: duas imagens lado a lado dentro de lentes circulares. Coloque o celular em um visor compatível.":"Modo normal: imagem em tela inteira, sem círculos ou divisão em lentes.";
+}
+$("modeNormal").onclick=()=>setViewerMode("normal");
+$("modeHeadset").onclick=()=>setViewerMode("headset");
+$("viewerBack").onclick=()=>openPage("home");
+$("exitViewer").onclick=()=>{if(document.fullscreenElement)document.exitFullscreen?.();document.body.classList.remove("viewer-page-fullscreen");openPage("home")};
+$("enterFullscreen").onclick=async()=>{try{await $("viewer").requestFullscreen?.();}catch{}document.body.classList.add("viewer-page-fullscreen")};
+document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement)document.body.classList.remove("viewer-page-fullscreen")});
+setViewerMode(viewerMode);
+
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
