@@ -15,6 +15,9 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.os.Build;
 import android.widget.Toast;
+import android.widget.FrameLayout;
+import androidx.camera.core.Preview;
+import androidx.camera.view.PreviewView;
 
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
@@ -45,6 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MainActivity extends ComponentActivity {
     private static final int CAMERA_PERMISSION = 41;
     private WebView webView;
+    private PreviewView previewView;
     private WebViewAssetLoader assetLoader;
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
@@ -61,7 +65,14 @@ public class MainActivity extends ComponentActivity {
             .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
             .build();
 
+        FrameLayout root = new FrameLayout(this);
+        previewView = new PreviewView(this);
+        previewView.setImplementationMode(PreviewView.ImplementationMode.COMPATIBLE);
+        previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
+        root.addView(previewView, new FrameLayout.LayoutParams(-1, -1));
         webView = new WebView(this);
+        webView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setMediaPlaybackRequiresUserGesture(true);
@@ -77,7 +88,8 @@ public class MainActivity extends ComponentActivity {
                 view.evaluateJavascript("window.OpenVR && window.OpenVR.launchImmersive && window.OpenVR.launchImmersive()", null);
             }
         });
-        setContentView(webView);
+        root.addView(webView, new FrameLayout.LayoutParams(-1, -1));
+        setContentView(root);
         webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html");
     }
 
@@ -151,16 +163,18 @@ public class MainActivity extends ComponentActivity {
                 future.addListener(() -> {
                     try {
                         cameraProvider = future.get();
+                        Preview preview = new Preview.Builder().build();
+                        preview.setSurfaceProvider(previewView.getSurfaceProvider());
                         imageAnalysis = new ImageAnalysis.Builder()
                             .setTargetResolution(new android.util.Size(640, 480))
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                             .build();
                         imageAnalysis.setAnalyzer(cameraExecutor, this::analyzeFrame);
-                        CameraSelector selector = CameraSelector.DEFAULT_FRONT_CAMERA;
+                        CameraSelector selector = CameraSelector.DEFAULT_BACK_CAMERA;
                         cameraProvider.unbindAll();
-                        cameraProvider.bindToLifecycle(MainActivity.this, selector, imageAnalysis);
-                        sendStatus("active", "Câmera ativa — mostre sua mão.");
+                        cameraProvider.bindToLifecycle(MainActivity.this, selector, preview, imageAnalysis);
+                        sendStatus("active", "Realidade mista ativa — câmera traseira ligada. Mostre as mãos à câmera.");
                     } catch (Exception e) {
                         tracking.set(false);
                         sendStatus("error", "Não foi possível iniciar a câmera: " + e.getMessage());
@@ -191,8 +205,7 @@ public class MainActivity extends ComponentActivity {
             raw.copyPixelsFromBuffer(ByteBuffer.wrap(packed));
             Matrix matrix = new Matrix();
             matrix.postRotate(image.getImageInfo().getRotationDegrees());
-            // Mirror the front-camera view so hand movement matches the on-screen cursor.
-            matrix.postScale(-1f, 1f);
+            // Rear camera is not mirrored: coordinates match the real-world view.
             Bitmap oriented = Bitmap.createBitmap(raw, 0, 0, raw.getWidth(), raw.getHeight(), matrix, true);
             raw.recycle();
             MPImage mpImage = new BitmapImageBuilder(oriented).build();
