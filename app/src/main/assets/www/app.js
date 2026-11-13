@@ -191,7 +191,7 @@ addCaptured.onclick=()=>{
   if(!handsActive)return;
   const h=data.hands?.[0];if(!h||h.length<21){cursor.style.display="none";endPinch();return}
   const r=stage.getBoundingClientRect(),tip=h[8],thumb=h[4];
-  const nx=clamp(1-tip.x,0,1),ny=clamp(tip.y,0,1),x=nx*r.width,y=ny*r.height;
+  const nx=clamp(tip.x,0,1),ny=clamp(tip.y,0,1),x=nx*r.width,y=ny*r.height;
   lastPoint={x,y};cursor.style.display="block";cursor.style.left=x+"px";cursor.style.top=y+"px";
   const dist=Math.hypot(tip.x-thumb.x,tip.y-thumb.y),pinching=dist<.055;
   cursor.classList.toggle("pinching",pinching);
@@ -208,3 +208,15 @@ addCaptured.onclick=()=>{
   lastPalm=isPalm;lastFist=isFist;
  };
 })();
+
+
+window.OpenVR.launchImmersive = function(){
+ if(!window.OpenVRNative || window.OpenVR.immersiveBooted) return;
+ window.OpenVR.immersiveBooted = true;
+ document.body.classList.add("android-vr-mode");
+ openPage("viewer");
+ setViewerMode("headset");
+ window.OpenVRNative.enterImmersiveMode();
+ setHandStatus("Preparando câmera e reconhecimento de mãos…","loading");
+ startHands();
+};
