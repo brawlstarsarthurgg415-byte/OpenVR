@@ -21,7 +21,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.webkit.WebViewAssetLoader;
-import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mediapipe.framework.image.BitmapImageBuilder;
@@ -139,7 +138,7 @@ public class MainActivity extends Activity {
                         imageAnalysis.setAnalyzer(cameraExecutor, this::analyzeFrame);
                         CameraSelector selector = CameraSelector.DEFAULT_FRONT_CAMERA;
                         cameraProvider.unbindAll();
-                        cameraProvider.bindToLifecycle(ProcessLifecycleOwner.get(), selector, imageAnalysis);
+                        cameraProvider.bindToLifecycle(MainActivity.this, selector, imageAnalysis);
                         sendStatus("active", "Câmera ativa — mostre sua mão.");
                     } catch (Exception e) {
                         tracking.set(false);
