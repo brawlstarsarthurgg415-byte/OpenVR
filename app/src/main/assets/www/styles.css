@@ -77,3 +77,8 @@ body.android-vr-mode .vr-app-grid button{padding:20px;font-size:16px}
 body.android-vr-mode .vr-app-grid i{font-size:30px}
 body.android-vr-mode .hand-cursor{width:28px;height:28px}
 body.android-vr-mode .vr-target{display:none!important}
+
+/* Physical gamepad status inside immersive viewer */
+.controller-status{position:absolute;z-index:25;top:12px;left:12px;max-width:72%;padding:7px 10px;border:1px solid #52627a;border-radius:9px;background:#07111ddd;color:#d2dced;font:600 10px 'DM Sans';letter-spacing:.5px;pointer-events:none;opacity:.82}
+.controller-status.connected{border-color:#4dbb91;color:#8ff0c3}
+body.android-vr-mode .controller-status{top:env(safe-area-inset-top, 8px);left:10px}
