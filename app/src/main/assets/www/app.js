@@ -82,3 +82,50 @@ window.OpenVR={
  }
 };
 vrTarget.onclick=()=>{vrTarget.classList.add("activated");vrTarget.textContent="SELECIONADO ✓";setTimeout(()=>{vrTarget.classList.remove("activated");vrTarget.textContent="TOQUE COM PINÇA"},1200)};
+
+
+// OpenVR 3D lobby and multi-view object capture prototype
+const capturePanel=$("capturePanel"),videoInput=$("objectVideo"),captureVideo=$("captureVideo");
+const captureProgress=$("captureProgress"),captureFrames=$("captureFrames"),addCaptured=$("addCapturedObject");
+let sampledFrames=[],capturedVideoUrl=null;
+$("openCapture").onclick=()=>{capturePanel.classList.add("visible");capturePanel.scrollIntoView({behavior:"smooth",block:"nearest"})};
+$("closeCapture").onclick=()=>capturePanel.classList.remove("visible");
+videoInput.onchange=async()=>{
+ const file=videoInput.files&&videoInput.files[0];if(!file)return;
+ if(!file.type.startsWith("video/")){captureProgress.textContent="Escolha um arquivo de vídeo.";return}
+ if(capturedVideoUrl)URL.revokeObjectURL(capturedVideoUrl);
+ capturedVideoUrl=URL.createObjectURL(file);captureVideo.src=capturedVideoUrl;captureVideo.hidden=false;
+ captureProgress.textContent="Lendo vídeo e extraindo diferentes ângulos...";
+ captureFrames.replaceChildren();sampledFrames=[];addCaptured.disabled=true;
+ try{
+  await new Promise((resolve,reject)=>{captureVideo.onloadedmetadata=resolve;captureVideo.onerror=reject});
+  const duration=captureVideo.duration;if(!Number.isFinite(duration)||duration<1)throw Error("Vídeo muito curto ou inválido.");
+  const count=Math.min(12,Math.max(5,Math.ceil(duration/1.4)));
+  const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
+  canvas.width=240;canvas.height=160;
+  for(let i=0;i<count;i++){
+   const time=Math.min(Math.max(0.05,duration*(i/(count-1))),Math.max(.05,duration-.05));
+   await new Promise((resolve,reject)=>{captureVideo.onseeked=resolve;captureVideo.onerror=reject;captureVideo.currentTime=time});
+   ctx.fillStyle="#07111d";ctx.fillRect(0,0,canvas.width,canvas.height);
+   const scale=Math.min(canvas.width/captureVideo.videoWidth,canvas.height/captureVideo.videoHeight);
+   const w=captureVideo.videoWidth*scale,h=captureVideo.videoHeight*scale;
+   ctx.drawImage(captureVideo,(canvas.width-w)/2,(canvas.height-h)/2,w,h);
+   const data=canvas.toDataURL("image/jpeg",.65);sampledFrames.push(data);
+   const img=document.createElement("img");img.src=data;img.alt="Quadro "+(i+1);captureFrames.append(img);
+  }
+  captureProgress.textContent=sampledFrames.length+" quadros extraídos de "+Math.round(duration)+" segundos. Confira se o objeto aparece de vários lados.";
+  addCaptured.disabled=false;
+ }catch(e){captureProgress.textContent="Não foi possível processar o vídeo: "+e.message}
+};
+addCaptured.onclick=()=>{
+ if(!sampledFrames.length)return;
+ const name=$("objectName").value.trim()||"Objeto capturado";
+ const card=document.createElement("button");card.className="captured-object";card.type="button";
+ const img=document.createElement("img");img.src=sampledFrames[Math.floor(sampledFrames.length/2)];img.alt="";
+ const label=document.createElement("span");label.textContent=name;
+ card.append(img,label);$("capturedLobbyObjects").append(card);
+ card.onclick=()=>{const idx=sampledFrames.indexOf(img.src);if(idx>=0)img.src=sampledFrames[(idx+1)%sampledFrames.length]};
+ $("lobbyCube").classList.add("captured-cube");
+ toast("Prévia adicionada ao lobby");
+ capturePanel.classList.remove("visible");
+};
