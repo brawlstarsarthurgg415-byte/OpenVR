@@ -86,3 +86,17 @@ body.android-vr-mode .controller-status{top:env(safe-area-inset-top, 8px);left:1
 
 /* Camera-derived hand orientation aiming indicator */
 .aim-status{position:absolute;z-index:24;top:12px;left:50%;transform:translateX(-50%);padding:7px 11px;border:1px solid #70e5e866;border-radius:999px;background:#071522dd;color:#cfffff;font:700 9px 'DM Sans';letter-spacing:1px;pointer-events:none;white-space:nowrap}
+
+
+/* Mixed reality: native rear-camera PreviewView is visible beneath this transparent UI. */
+body.mixed-reality-mode,body.mixed-reality-mode main,body.mixed-reality-mode #viewer,body.mixed-reality-mode #vrStage{background:transparent!important}
+body.mixed-reality-mode #vrStage{border:0!important;border-radius:0!important}
+body.mixed-reality-mode .lobby-scene,
+body.mixed-reality-mode .normal-world,
+body.mixed-reality-mode .lens-pair{display:none!important}
+body.mixed-reality-mode .floating-window{display:flex!important;flex-direction:column}
+body.mixed-reality-mode .vr-app-menu{backdrop-filter:blur(18px);background:#071522c9}
+body.mixed-reality-mode .vr-target{display:block!important;top:50%;left:50%;transform:translate(-50%,-50%);background:#07152299}
+body.mixed-reality-mode .controller-status,
+body.mixed-reality-mode .aim-status{background:#071522aa}
+body.mixed-reality-mode .hand-cursor{z-index:40}
