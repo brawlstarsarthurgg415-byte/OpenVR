@@ -58,7 +58,7 @@ window.OpenVR={
  tracking:false,
  onHandStatus(data){
   setHandStatus(data.message||"Estado da câmera: "+data.state,data.state);
-  if(data.state==="active"){handsActive=true;handToggle.textContent="Parar reconhecimento"}
+  if(data.state==="active"){handsActive=true;handToggle.textContent="Parar reconhecimento";setHandStatus("Mãos ativas: palma, feche e abra duas vezes para o menu; pinça para selecionar e segure para mover.","active")}
   if(["stopped","permission_denied","error"].includes(data.state)){handsActive=false;handToggle.textContent="✋ Ativar mãos"}
  },
  onHandFrame(data){
