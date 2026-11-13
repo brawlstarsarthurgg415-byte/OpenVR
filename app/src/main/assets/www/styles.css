@@ -61,3 +61,19 @@
 .hand-cursor{z-index:30}.vr-target{z-index:5}
 .vr-stage.headset-mode .floating-window,.vr-stage.headset-mode .vr-app-menu{display:none}
 @media(max-width:600px){.floating-window{min-width:155px}.floating-window-body{padding:8px}.floating-window-header{font-size:9px}}
+
+
+body.android-vr-mode{overflow:hidden;background:#000;touch-action:none}
+body.android-vr-mode header,body.android-vr-mode nav,body.android-vr-mode .viewer-top,body.android-vr-mode .mode-picker,body.android-vr-mode .viewer-controls,body.android-vr-mode .viewer-note,body.android-vr-mode #handStatus,body.android-vr-mode #toast{display:none!important}
+body.android-vr-mode main{width:100vw;height:100dvh;max-width:none;margin:0;padding:0!important;overflow:hidden}
+body.android-vr-mode #viewer{display:block!important;width:100%;height:100%}
+body.android-vr-mode .page{display:none!important}
+body.android-vr-mode #viewer.page.active{display:block!important}
+body.android-vr-mode .vr-stage{width:100vw;height:100dvh;min-height:100dvh;border:0;border-radius:0;overflow:hidden}
+body.android-vr-mode .vr-stage.headset-mode .lens-pair{display:flex}
+body.android-vr-mode .vr-stage.headset-mode .lobby-scene,body.android-vr-mode .vr-stage.headset-mode .floating-window{display:none!important}
+body.android-vr-mode .vr-app-menu{width:min(520px,76vw);padding:24px}
+body.android-vr-mode .vr-app-grid button{padding:20px;font-size:16px}
+body.android-vr-mode .vr-app-grid i{font-size:30px}
+body.android-vr-mode .hand-cursor{width:28px;height:28px}
+body.android-vr-mode .vr-target{display:none!important}
