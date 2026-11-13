@@ -10,6 +10,10 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+import android.os.Build;
 import android.widget.Toast;
 
 import androidx.activity.ComponentActivity;
@@ -68,6 +72,10 @@ public class MainActivity extends ComponentActivity {
             public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return assetLoader.shouldInterceptRequest(request.getUrl());
             }
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                view.evaluateJavascript("window.OpenVR && window.OpenVR.launchImmersive && window.OpenVR.launchImmersive()", null);
+            }
         });
         setContentView(webView);
         webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html");
@@ -89,6 +97,21 @@ public class MainActivity extends ComponentActivity {
             runOnUiThread(() -> stopCameraPipeline());
         }
         @JavascriptInterface public boolean isNativeAvailable() { return true; }
+        @JavascriptInterface public void enterImmersiveMode() {
+            runOnUiThread(() -> {
+                getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN |
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    WindowInsetsController controller = getWindow().getInsetsController();
+                    if (controller != null) {
+                        controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                        controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                    }
+                }
+            });
+        }
     }
 
     @Override
@@ -116,13 +139,11 @@ public class MainActivity extends ComponentActivity {
                     HandLandmarker.HandLandmarkerOptions options =
                         HandLandmarker.HandLandmarkerOptions.builder()
                             .setBaseOptions(baseOptions)
-                            .setRunningMode(RunningMode.LIVE_STREAM)
+                            .setRunningMode(RunningMode.VIDEO)
                             .setNumHands(2)
                             .setMinHandDetectionConfidence(0.55f)
                             .setMinHandPresenceConfidence(0.5f)
                             .setMinTrackingConfidence(0.5f)
-                            .setResultListener(this::onHandResult)
-                            .setErrorListener(error -> sendStatus("error", error.getMessage()))
                             .build();
                     handLandmarker = HandLandmarker.createFromOptions(this, options);
                 }
@@ -156,10 +177,18 @@ public class MainActivity extends ComponentActivity {
         try {
             if (!tracking.get() || handLandmarker == null) return;
             ImageProxy.PlaneProxy plane = image.getPlanes()[0];
-            ByteBuffer buffer = plane.getBuffer();
-            buffer.rewind();
-            Bitmap raw = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
-            raw.copyPixelsFromBuffer(buffer);
+            ByteBuffer source = plane.getBuffer();
+            int width = image.getWidth();
+            int height = image.getHeight();
+            int rowStride = plane.getRowStride();
+            byte[] packed = new byte[width * height * 4];
+            ByteBuffer rowBuffer = source.duplicate();
+            for (int row = 0; row < height; row++) {
+                rowBuffer.position(row * rowStride);
+                rowBuffer.get(packed, row * width * 4, width * 4);
+            }
+            Bitmap raw = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            raw.copyPixelsFromBuffer(ByteBuffer.wrap(packed));
             Matrix matrix = new Matrix();
             matrix.postRotate(image.getImageInfo().getRotationDegrees());
             // Mirror the front-camera view so hand movement matches the on-screen cursor.
@@ -169,11 +198,13 @@ public class MainActivity extends ComponentActivity {
             MPImage mpImage = new BitmapImageBuilder(oriented).build();
             long timestamp = Math.max(System.currentTimeMillis(), lastTimestamp + 1);
             lastTimestamp = timestamp;
-            handLandmarker.detectAsync(mpImage, timestamp);
-            image.close();
+            HandLandmarkerResult result = handLandmarker.detectForVideo(mpImage, timestamp);
+            onHandResult(result, mpImage);
             oriented.recycle();
+            image.close();
         } catch (Exception e) {
             image.close();
+            sendStatus("error", "Falha no processamento da câmera: " + e.getMessage());
         }
     }
 
