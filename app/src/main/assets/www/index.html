@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080d19"><meta name="description" content="OpenVR — seu espaço de realidade virtual.">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icons/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./styles.css">
+<title>OpenVR</title>
+</head>
+<body>
+<div class="glow g1"></div><div class="glow g2"></div>
+<header><a class="brand" href="#"><b>◈</b> OPEN<span>VR</span></a><div class="status"><i id="statusDot"></i><span id="statusText">Modo demonstração</span><button id="profile" aria-label="Editar perfil">U</button></div></header>
+<main>
+<section class="page active" id="home">
+<div class="hero"><div><p class="eyebrow">SEU UNIVERSO COMEÇA AQUI</p><h1>Entre em um<br><em>novo espaço.</em></h1><p class="muted">Explore experiências, aprenda os controles e encontre seus amigos em realidade virtual.</p><button class="primary" data-open="apps">Explorar aplicativos ↗</button></div>
+<div class="scene"><div class="grid"></div><div class="portal"><div>OPEN<br><strong>VR</strong></div></div><small>VIRTUAL SPACE / 01</small></div></div>
+<div class="section-title"><div><p class="eyebrow">PAINEL</p><h2>Seu OpenVR</h2></div><span class="pill">PRÉVIA</span></div>
+<div class="stats"><article><b>⌖</b><small>Ambiente</small><strong>Lobby inicial</strong><span>Espaço virtual demonstrativo</span></article><article><b>⌘</b><small>Party</small><strong id="homeParty">Desconectado</strong><span>Crie uma sala para amigos</span></article><article><b>◎</b><small>Dispositivo</small><strong>Celular</strong><span>Mais modos em desenvolvimento</span></article></div>
+<div class="notice"><b>✦</b><div><strong>Projeto em desenvolvimento</strong><p>Esta primeira versão oferece interface e cliente de Party. Rastreamento de mãos e VR nativo serão integrados ao módulo Android.</p></div></div>
+</section>
+<section class="page" id="apps"><div class="intro"><p class="eyebrow">BIBLIOTECA</p><h1>Aplicativos</h1><p class="muted">Um espaço para suas experiências OpenVR.</p></div><div class="apps">
+<article><div class="art violet">◈</div><h3>OpenVR Home</h3><p>Seu espaço virtual inicial.</p><span class="tag">AMBIENTE</span></article>
+<article><div class="art blue">⌖</div><h3>Explorador 3D</h3><p>Visualizador 3D planejado.</p><span class="tag">EM DESENVOLVIMENTO</span></article>
+<article><div class="art green">✧</div><h3>Aprender VR</h3><p>Conheça os controles e gestos.</p><button class="link" data-open="learn">Abrir tutorial →</button></article>
+<article><div class="art pink">⌘</div><h3>Party</h3><p>Encontre amigos em uma sala.</p><button class="link" data-open="party">Abrir Party →</button></article></div></section>
+<section class="page" id="learn"><div class="intro"><p class="eyebrow">PRIMEIROS PASSOS</p><h1>Aprender VR</h1><p class="muted">Um guia rápido para entender a experiência.</p></div><div class="lessons">
+<article><b>01</b><div><h3>Prepare seu celular</h3><p>Use um suporte compatível com seu aparelho e confira se ele está firme antes de iniciar uma experiência.</p></div></article>
+<article><b>02</b><div><h3>Entenda os controles</h3><p>Rastreamento de mãos e gestos ainda não estão ativos nesta versão; serão integrados no módulo Android.</p></div></article>
+<article><b>03</b><div><h3>Convide seus amigos</h3><p>Abra Party, crie uma sala e compartilhe o código com seus amigos.</p></div></article></div></section>
+<section class="page" id="party"><div class="intro"><p class="eyebrow">JOGUE JUNTO</p><h1>Party</h1><p class="muted">Crie uma sala ou entre usando o código de um amigo.</p></div><div class="party-layout">
+<div class="panel"><div class="symbol">⌘</div><h2>Entrar na diversão</h2><label for="playerName">Seu nome</label><input id="playerName" maxlength="20" placeholder="Como devemos te chamar?"><button class="primary wide" id="create">＋ Criar Party</button><div class="or">OU ENTRE COM UM CÓDIGO</div><label for="partyCode">Código da sala</label><input id="partyCode" maxlength="12" placeholder="Ex.: A1B2C3"><button class="secondary wide" id="join">Entrar na Party</button><p class="helper" id="partyMessage">A conexão será testada ao criar ou entrar.</p></div>
+<div class="panel"><div class="room-head"><div><p class="eyebrow">SUA SALA</p><h2 id="roomTitle">Nenhuma Party ativa</h2></div><span class="live" id="roomLive">OFFLINE</span></div><div class="code" id="roomCode">------</div><button class="secondary wide" id="copy" disabled>Copiar código</button><div class="members-head"><b>Participantes</b><span id="memberCount">0 / 8</span></div><div id="members"><p class="helper">Crie ou entre em uma sala para ver os participantes.</p></div><button class="quiet wide" id="leave" disabled>Sair da Party</button></div></div></section>
+<section class="page" id="settings"><div class="intro"><p class="eyebrow">PREFERÊNCIAS</p><h1>Configurações</h1><p class="muted">Ajuste as opções desta versão.</p></div><div class="panel settings">
+<div class="setting"><div><b>Nome de jogador</b><p>Como seu nome aparece nas Parties.</p></div><input id="settingsName" maxlength="20" placeholder="Jogador"></div>
+<div class="setting"><div><b>Servidor de Party</b><p>Endereço da API multiplayer.</p></div><input id="serverUrl" type="url" spellcheck="false"></div>
+<div class="setting"><div><b>Testar conexão</b><p>Verifica se o servidor responde.</p></div><button class="secondary" id="test">Testar</button></div><p class="helper" id="settingsMessage">O servidor padrão ainda precisa ser validado.</p></div>
+<div class="notice"><b>ⓘ</b><div><strong>Recursos ainda não disponíveis</strong><p>ARCore, câmera, rastreamento de mãos, áudio espacial e renderização VR precisam de desenvolvimento Android nativo.</p></div></div></section>
+</main>
+<nav><button class="selected" data-page="home"><span>⌂</span>Início</button><button data-page="apps"><span>▦</span>Apps</button><button data-page="learn"><span>✧</span>Aprender</button><button data-page="party"><span>⌘</span>Party</button><button data-page="settings"><span>⚙</span>Ajustes</button></nav><div id="toast" class="toast"></div>
+<script src="./app.js"></script>
+</body></html>
