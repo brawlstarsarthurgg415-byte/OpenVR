@@ -200,7 +200,28 @@ addCaptured.onclick=()=>{
   if(!handsActive)return;
   const h=data.hands?.[0];if(!h||h.length<21){cursor.style.display="none";endPinch();return}
   const r=stage.getBoundingClientRect(),tip=h[8],thumb=h[4];
-  const nx=clamp(tip.x,0,1),ny=clamp(tip.y,0,1),x=nx*r.width,y=ny*r.height;
+  // Estimate controller aim from the palm plane: wrist, index MCP and pinky MCP.
+  // This works with ordinary gamepads because it tracks the hand holding them,
+  // not an IMU inside the controller.
+  const wrist=h[0],indexBase=h[5],middleBase=h[9],pinkyBase=h[17];
+  const ax=indexBase.x-wrist.x, ay=indexBase.y-wrist.y, az=indexBase.z-wrist.z;
+  const bx=pinkyBase.x-wrist.x, by=pinkyBase.y-wrist.y, bz=pinkyBase.z-wrist.z;
+  let nx=ay*bz-az*by, ny=az*bx-ax*bz, nz=ax*by-ay*bx;
+  const nl=Math.hypot(nx,ny,nz)||1; nx/=nl; ny/=nl; nz/=nl;
+  // Normalize sign so the pointer does not flip when the palm turns.
+  if(nz<0){nx=-nx;ny=-ny;nz=-nz}
+  if(!window.OpenVR.aimCalibration)window.OpenVR.aimCalibration={x:nx,y:ny,count:0,ready:false};
+  const cal=window.OpenVR.aimCalibration;
+  if(!cal.ready){
+   cal.x+=(nx-cal.x)*.12;cal.y+=(ny-cal.y)*.12;cal.count++;
+   if(cal.count>=24){cal.ready=true;toast("Mira da mão calibrada")}
+  }
+  const sensitivity=2.35;
+  const aimX=clamp(.5+(nx-cal.x)*sensitivity,.04,.96);
+  const aimY=clamp(.5+(ny-cal.y)*sensitivity,.06,.94);
+  const smooth=window.OpenVR.aimSmooth||(window.OpenVR.aimSmooth={x:.5,y:.5});
+  smooth.x+=(aimX-smooth.x)*.28;smooth.y+=(aimY-smooth.y)*.28;
+  const x=smooth.x*r.width,y=smooth.y*r.height;
   lastPoint={x,y};cursor.style.display="block";cursor.style.left=x+"px";cursor.style.top=y+"px";
   const dist=Math.hypot(tip.x-thumb.x,tip.y-thumb.y),pinching=dist<.055;
   cursor.classList.toggle("pinching",pinching);
