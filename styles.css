@@ -45,3 +45,5 @@
 .capture-disclaimer{font-size:10px;line-height:1.5;color:#e6bd83;margin-top:12px}
 .vr-stage.headset-mode .lobby-scene{display:none}
 @media(max-width:600px){.capture-actions{grid-template-columns:1fr}.lobby-cube{width:65px;height:65px}.lobby-caption{top:69%}}
+
+.vr-stage.normal-mode>.normal-world{display:none!important}.vr-stage.normal-mode>.lobby-scene{display:block}
