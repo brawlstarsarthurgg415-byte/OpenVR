@@ -82,3 +82,7 @@ body.android-vr-mode .vr-target{display:none!important}
 .controller-status{position:absolute;z-index:25;top:12px;left:12px;max-width:72%;padding:7px 10px;border:1px solid #52627a;border-radius:9px;background:#07111ddd;color:#d2dced;font:600 10px 'DM Sans';letter-spacing:.5px;pointer-events:none;opacity:.82}
 .controller-status.connected{border-color:#4dbb91;color:#8ff0c3}
 body.android-vr-mode .controller-status{top:env(safe-area-inset-top, 8px);left:10px}
+
+
+/* Camera-derived hand orientation aiming indicator */
+.aim-status{position:absolute;z-index:24;top:12px;left:50%;transform:translateX(-50%);padding:7px 11px;border:1px solid #70e5e866;border-radius:999px;background:#071522dd;color:#cfffff;font:700 9px 'DM Sans';letter-spacing:1px;pointer-events:none;white-space:nowrap}
