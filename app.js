@@ -129,3 +129,82 @@ addCaptured.onclick=()=>{
  toast("Prévia adicionada ao lobby");
  capturePanel.classList.remove("visible");
 };
+
+
+// OpenVR gesture interaction: double fist-pump menu, pinch select/drag/resize.
+(()=>{
+ const stage=$("vrStage"),cursor=$("handCursor"),menu=$("vrAppMenu");
+ if(!stage||!cursor||!menu)return;
+ let gestureState="idle",openCloseCount=0,gestureDeadline=0,lastPalm=false,lastFist=false;
+ let pinchActive=false,pinchStart=0,drag=null,activePointer=null,lastPoint={x:0,y:0};
+ const now=()=>performance.now();
+ const fingersExtended=h=>[8,12,16,20].map((tip,i)=>{const pip=[6,10,14,18][i];return h[tip].y<h[pip].y-0.015});
+ function palm(h){const f=fingersExtended(h);const thumb=Math.hypot(h[4].x-h[5].x,h[4].y-h[5].y)>.12;return f.every(Boolean)&&thumb}
+ function fist(h){const f=fingersExtended(h);return f.filter(Boolean).length<=1}
+ function toggleMenu(){menu.classList.toggle("visible");menu.setAttribute("aria-hidden",String(!menu.classList.contains("visible")));toast(menu.classList.contains("visible")?"Menu de aplicativos aberto":"Menu fechado")}
+ function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+ function startPinch(x,y){
+  pinchActive=true;pinchStart=now();const target=document.elementFromPoint(x,y);
+  const win=target?.closest(".floating-window");
+  if(win){
+   if(target.closest(".window-resize")){const r=win.getBoundingClientRect();drag={type:"resize",el:win,startX:x,startY:y,w:r.width,h:r.height};}
+   else if(target.closest(".floating-window-header")&&!target.closest(".window-close")){const r=win.getBoundingClientRect();drag={type:"move",el:win,startX:x,startY:y,left:r.left,top:r.top};}
+   else drag={type:"click",el:target?.closest("button")||win};
+  }else{
+   const hit=target?.closest("button,[data-vr-app]");
+   drag=hit?{type:"click",el:hit}:null;
+  }
+  if(drag?.el?.classList?.contains("window-close")){drag.el.closest(".floating-window").classList.remove("visible");drag=null}
+ }
+ function movePinch(x,y){
+  if(!drag)return;
+  const bounds=stage.getBoundingClientRect(),el=drag.el;
+  if(drag.type==="move"){
+   const left=clamp(drag.left+x-drag.startX,0,bounds.width-el.offsetWidth);
+   const top=clamp(drag.top+y-drag.startY,0,bounds.height-el.offsetHeight);
+   el.style.left=left+"px";el.style.top=top+"px";el.style.right="auto";
+  }else if(drag.type==="resize"){
+   el.style.width=clamp(drag.w+x-drag.startX,190,bounds.width*.9)+"px";
+   el.style.height=clamp(drag.h+y-drag.startY,130,bounds.height*.9)+"px";
+  }
+ }
+ function endPinch(){
+  if(!pinchActive)return;
+  if(drag?.type==="click"&&now()-pinchStart<450){
+   if(drag.el?.matches("[data-vr-app]"))openVRApp(drag.el.dataset.vrApp);
+   else if(drag.el?.matches(".window-action")){const action=drag.el.dataset.windowAction;if(action==="apps")toggleMenu();if(action==="capture")$("openCapture")?.click()}
+   else drag.el?.click?.();
+  }
+  pinchActive=false;drag=null;
+ }
+ function openVRApp(app){
+  menu.classList.remove("visible");menu.setAttribute("aria-hidden","true");
+  if(app==="home"){document.querySelectorAll(".floating-window").forEach(w=>w.classList.add("visible"))}
+  else if(app==="gallery"){toast("Galeria 3D: objetos capturados aparecem no lobby");$("capturePanel")?.classList.add("visible")}
+  else if(app==="party"){openPage("party")}
+  else if(app==="settings"){openPage("settings")}
+ }
+ $("vrMenuClose").onclick=()=>{menu.classList.remove("visible");menu.setAttribute("aria-hidden","true")};
+ menu.querySelectorAll("[data-vr-app]").forEach(b=>b.addEventListener("click",()=>openVRApp(b.dataset.vrApp)));
+ document.querySelectorAll(".floating-window").forEach(w=>{w.classList.add("visible");w.querySelector(".window-close").addEventListener("click",()=>w.classList.remove("visible"))});
+ window.OpenVR.onHandFrame=function(data){
+  if(!handsActive)return;
+  const h=data.hands?.[0];if(!h||h.length<21){cursor.style.display="none";endPinch();return}
+  const r=stage.getBoundingClientRect(),tip=h[8],thumb=h[4];
+  const nx=clamp(1-tip.x,0,1),ny=clamp(tip.y,0,1),x=nx*r.width,y=ny*r.height;
+  lastPoint={x,y};cursor.style.display="block";cursor.style.left=x+"px";cursor.style.top=y+"px";
+  const dist=Math.hypot(tip.x-thumb.x,tip.y-thumb.y),pinching=dist<.055;
+  cursor.classList.toggle("pinching",pinching);
+  const screenX=r.left+x,screenY=r.top+y;
+  if(pinching&&!pinchActive)startPinch(screenX,screenY);
+  if(pinching&&pinchActive)movePinch(screenX,screenY);
+  if(!pinching&&pinchActive)endPinch();
+  const isPalm=palm(h),isFist=fist(h),t=now();
+  if(isPalm&&!lastPalm&&gestureState==="idle"){gestureState="palm";gestureDeadline=t+2600;openCloseCount=0}
+  if(gestureState==="palm"&&isFist&&!lastFist){gestureState="closed"}
+  if(gestureState==="closed"&&isPalm&&!lastPalm){openCloseCount++;gestureState=openCloseCount>=2?"done":"palm"}
+  if(gestureState==="done"){toggleMenu();gestureState="idle";openCloseCount=0}
+  if(gestureState!=="idle"&&t>gestureDeadline){gestureState="idle";openCloseCount=0}
+  lastPalm=isPalm;lastFist=isFist;
+ };
+})();
