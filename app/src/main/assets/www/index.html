@@ -11,11 +11,27 @@
 <header><a class="brand" href="#"><b>◈</b> OPEN<span>VR</span></a><div class="status"><i id="statusDot"></i><span id="statusText">Modo demonstração</span><button id="profile" aria-label="Editar perfil">U</button></div></header>
 <main>
 <section class="page active" id="home">
-<div class="hero"><div><p class="eyebrow">SEU UNIVERSO COMEÇA AQUI</p><h1>Entre em um<br><em>novo espaço.</em></h1><p class="muted">Explore experiências, aprenda os controles e encontre seus amigos em realidade virtual.</p><button class="primary" data-open="apps">Explorar aplicativos ↗</button></div>
+<div class="hero"><div><p class="eyebrow">SEU UNIVERSO COMEÇA AQUI</p><h1>Entre em um<br><em>novo espaço.</em></h1><p class="muted">Explore experiências, aprenda os controles e encontre seus amigos em realidade virtual.</p><button class="primary" data-open="apps">Explorar aplicativos ↗</button><button class="secondary home-vr" data-open="viewer">◉ Iniciar experiência VR</button></div>
 <div class="scene"><div class="grid"></div><div class="portal"><div>OPEN<br><strong>VR</strong></div></div><small>VIRTUAL SPACE / 01</small></div></div>
 <div class="section-title"><div><p class="eyebrow">PAINEL</p><h2>Seu OpenVR</h2></div><span class="pill">PRÉVIA</span></div>
 <div class="stats"><article><b>⌖</b><small>Ambiente</small><strong>Lobby inicial</strong><span>Espaço virtual demonstrativo</span></article><article><b>⌘</b><small>Party</small><strong id="homeParty">Desconectado</strong><span>Crie uma sala para amigos</span></article><article><b>◎</b><small>Dispositivo</small><strong>Celular</strong><span>Mais modos em desenvolvimento</span></article></div>
 <div class="notice"><b>✦</b><div><strong>Projeto em desenvolvimento</strong><p>Esta primeira versão oferece interface e cliente de Party. Rastreamento de mãos e VR nativo serão integrados ao módulo Android.</p></div></div>
+</section>
+<section class="page" id="viewer">
+<div class="viewer-top"><button class="back-button" id="viewerBack">← Voltar</button><div><p class="eyebrow">OPENVR VIEWER</p><h1>Experiência VR</h1></div></div>
+<div class="mode-picker" role="group" aria-label="Modo de visualização">
+<button class="mode-choice selected" id="modeNormal" aria-pressed="true"><b>▣</b><span>Modo normal</span><small>Tela inteira</small></button>
+<button class="mode-choice" id="modeHeadset" aria-pressed="false"><b>◉</b><span>Óculos personalizado</span><small>Duas lentes circulares</small></button>
+</div>
+<div id="vrStage" class="vr-stage normal-mode">
+<div class="vr-world normal-world"><div class="vr-horizon"></div><div class="vr-moon"></div><div class="vr-platform"></div><div class="vr-world-label">OPENVR <small>VIRTUAL SPACE</small></div></div>
+<div class="lens-pair" aria-label="Visualização para lente esquerda e direita">
+<div class="lens"><div class="vr-world"><div class="vr-horizon"></div><div class="vr-moon"></div><div class="vr-platform"></div><div class="vr-world-label">OPENVR</div></div></div>
+<div class="lens"><div class="vr-world right-eye"><div class="vr-horizon"></div><div class="vr-moon"></div><div class="vr-platform"></div><div class="vr-world-label">OPENVR</div></div></div>
+</div>
+</div>
+<div class="viewer-controls"><button class="primary" id="enterFullscreen">⛶ Tela cheia</button><button class="secondary" id="exitViewer">Sair do visualizador</button></div>
+<p class="viewer-note" id="viewerNote">Modo normal: imagem em tela inteira. Escolha Óculos personalizado para usar um visor com duas lentes.</p>
 </section>
 <section class="page" id="apps"><div class="intro"><p class="eyebrow">BIBLIOTECA</p><h1>Aplicativos</h1><p class="muted">Um espaço para suas experiências OpenVR.</p></div><div class="apps">
 <article><div class="art violet">◈</div><h3>OpenVR Home</h3><p>Seu espaço virtual inicial.</p><span class="tag">AMBIENTE</span></article>
