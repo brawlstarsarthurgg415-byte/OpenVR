@@ -47,7 +47,7 @@ const handStatus=$("handStatus"), handToggle=$("handToggle"), handCursor=$("hand
 function setHandStatus(message,state="idle"){handStatus.textContent=message;handStatus.dataset.state=state}
 function startHands(){
  if(!window.OpenVRNative){setHandStatus("O reconhecimento por câmera funciona no APK Android. Esta versão web não tem acesso ao módulo nativo.","unavailable");return}
- handsActive=true;window.OpenVR.tracking=true;handToggle.textContent="Parar reconhecimento";setHandStatus("Solicitando acesso à câmera frontal...","loading");window.OpenVRNative.startHandTracking();
+ handsActive=true;window.OpenVR.tracking=true;handToggle.textContent="Parar reconhecimento";setHandStatus("Solicitando acesso à câmera traseira...","loading");window.OpenVRNative.startHandTracking();
 }
 function stopHands(){
  handsActive=false;if(window.OpenVR)window.OpenVR.tracking=false;pinchWasDown=false;handCursor.style.display="none";handToggle.textContent="✋ Ativar mãos";
@@ -244,11 +244,11 @@ addCaptured.onclick=()=>{
 window.OpenVR.launchImmersive = function(){
  if(!window.OpenVRNative || window.OpenVR.immersiveBooted) return;
  window.OpenVR.immersiveBooted = true;
- document.body.classList.add("android-vr-mode");
+ document.body.classList.add("android-vr-mode","mixed-reality-mode");
  openPage("viewer");
- setViewerMode("headset");
+ setViewerMode("normal");
  window.OpenVRNative.enterImmersiveMode();
- setHandStatus("Preparando câmera e reconhecimento de mãos…","loading");
+ setHandStatus("Preparando câmera traseira e reconhecimento de mãos…","loading");
  startHands();
 };
 
