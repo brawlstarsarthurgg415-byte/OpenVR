@@ -177,6 +177,15 @@ addCaptured.onclick=()=>{
   }
   pinchActive=false;drag=null;
  }
+ window.OpenVR.controllerSelect=function(down){
+  const r=stage.getBoundingClientRect();
+  const x=r.left+(cursor.style.display!=="none"&&cursor.style.left?parseFloat(cursor.style.left):r.width/2);
+  const y=r.top+(cursor.style.display!=="none"&&cursor.style.top?parseFloat(cursor.style.top):r.height/2);
+  if(down&&!pinchActive)startPinch(x,y);
+  if(!down&&pinchActive)endPinch();
+ };
+ window.OpenVR.controllerMenu=function(){toggleMenu()};
+ window.OpenVR.controllerHome=function(){document.querySelectorAll(".floating-window").forEach(w=>w.classList.add("visible"));menu.classList.remove("visible")};
  function openVRApp(app){
   menu.classList.remove("visible");menu.setAttribute("aria-hidden","true");
   if(app==="home"){document.querySelectorAll(".floating-window").forEach(w=>w.classList.add("visible"))}
@@ -220,3 +229,41 @@ window.OpenVR.launchImmersive = function(){
  setHandStatus("Preparando câmera e reconhecimento de mãos…","loading");
  startHands();
 };
+
+
+// USB/2.4 GHz gamepad support: camera keeps tracking hand position; controller adds physical actions.
+(()=>{
+ let previous=[],activeId="",raf=0,triggerHeld=false;
+ const badge=document.createElement("div");
+ badge.className="controller-status";
+ badge.textContent="CONTROLE: aguardando";
+ $("vrStage").append(badge);
+ const setBadge=(text,connected)=>{badge.textContent=text;badge.classList.toggle("connected",!!connected)};
+ const pressed=(gp,i)=>!!gp.buttons[i]?.pressed;
+ const loop=()=>{
+  const pads=navigator.getGamepads?navigator.getGamepads():[];
+  const gp=Array.from(pads).find(p=>p&&p.connected);
+  if(!gp){
+   if(activeId){activeId="";setBadge("CONTROLE: aguardando",false);if(triggerHeld){window.OpenVR.controllerSelect(false);triggerHeld=false}}
+   previous=[];raf=requestAnimationFrame(loop);return;
+  }
+  if(activeId!==gp.id){activeId=gp.id;previous=[];setBadge("CONTROLE CONECTADO · "+gp.id.slice(0,24),true);toast("Controle detectado");}
+  const edge=i=>pressed(gp,i)&&!previous[i];
+  if(edge(0)){window.OpenVR.controllerSelect(true);window.OpenVR.controllerSelect(false)}
+  if(edge(1)){
+   const menu=$("vrAppMenu");
+   if(menu.classList.contains("visible"))$("vrMenuClose").click();
+   else toast("Voltar");
+  }
+  if(edge(2))window.OpenVR.controllerMenu();
+  if(edge(3))window.OpenVR.controllerHome();
+  if(pressed(gp,6)||pressed(gp,7)){
+   if(!triggerHeld){window.OpenVR.controllerSelect(true);triggerHeld=true}
+  }else if(triggerHeld){window.OpenVR.controllerSelect(false);triggerHeld=false}
+  previous=gp.buttons.map(b=>!!b.pressed);
+  raf=requestAnimationFrame(loop);
+ };
+ window.addEventListener("gamepadconnected",e=>{activeId=e.gamepad.id;setBadge("CONTROLE CONECTADO",true);toast("Controle conectado ao OpenVR")});
+ window.addEventListener("gamepaddisconnected",()=>{activeId="";setBadge("CONTROLE DESCONECTADO",false);if(triggerHeld){window.OpenVR.controllerSelect(false);triggerHeld=false}});
+ if(!raf)raf=requestAnimationFrame(loop);
+})();
