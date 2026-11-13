@@ -2,7 +2,7 @@ const DEFAULT_API="https://openvr-party-server-c7-v-production.up.railway.app";
 const $=id=>document.getElementById(id);
 let apiBase=localStorage.getItem("openvr_api")||DEFAULT_API,player=localStorage.getItem("openvr_name")||"Jogador",activeCode="",socket=null,poll=null;
 function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2300)}
-function openPage(id){document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("selected",b.dataset.page===id));scrollTo({top:0,behavior:"smooth"})}
+function openPage(id){if(id!=="viewer"&&window.OpenVR?.tracking)stopHands();document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("selected",b.dataset.page===id));scrollTo({top:0,behavior:"smooth"})}
 document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>openPage(b.dataset.page));document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openPage(b.dataset.open));
 function api(path,opts={}){return fetch(apiBase.replace(/\/+$/,"")+path,{...opts,headers:{"Content-Type":"application/json",...(opts.headers||{})}}).then(async r=>{let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.error||d.message||("HTTP "+r.status));return d})}
 function name(){player=($("playerName").value||player||"Jogador").trim().slice(0,20);localStorage.setItem("openvr_name",player);$("playerName").value=player;$("settingsName").value=player;$("profile").textContent=player[0].toUpperCase();return player}
@@ -39,3 +39,93 @@ document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement
 setViewerMode(viewerMode);
 
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+
+
+// Native MediaPipe hand tracking bridge
+let handsActive=false, pinchWasDown=false, lastHandSeen=0;
+const handStatus=$("handStatus"), handToggle=$("handToggle"), handCursor=$("handCursor"), vrTarget=$("vrTarget");
+function setHandStatus(message,state="idle"){handStatus.textContent=message;handStatus.dataset.state=state}
+function startHands(){
+ if(!window.OpenVRNative){setHandStatus("O reconhecimento por câmera funciona no APK Android. Esta versão web não tem acesso ao módulo nativo.","unavailable");return}
+ handsActive=true;window.OpenVR.tracking=true;handToggle.textContent="Parar reconhecimento";setHandStatus("Solicitando acesso à câmera frontal...","loading");window.OpenVRNative.startHandTracking();
+}
+function stopHands(){
+ handsActive=false;if(window.OpenVR)window.OpenVR.tracking=false;pinchWasDown=false;handCursor.style.display="none";handToggle.textContent="✋ Ativar mãos";
+ if(window.OpenVRNative)window.OpenVRNative.stopHandTracking();setHandStatus("Reconhecimento de mãos desligado.","idle");
+}
+handToggle.onclick=()=>handsActive?stopHands():startHands();
+window.OpenVR={
+ tracking:false,
+ onHandStatus(data){
+  setHandStatus(data.message||"Estado da câmera: "+data.state,data.state);
+  if(data.state==="active"){handsActive=true;handToggle.textContent="Parar reconhecimento"}
+  if(["stopped","permission_denied","error"].includes(data.state)){handsActive=false;handToggle.textContent="✋ Ativar mãos"}
+ },
+ onHandFrame(data){
+  if(!handsActive)return;
+  const hand=data.hands&&data.hands[0];
+  if(!hand||hand.length<9){handCursor.style.display="none";pinchWasDown=false;return}
+  lastHandSeen=Date.now();
+  const stage=$("vrStage"),rect=stage.getBoundingClientRect(),tip=hand[8],thumb=hand[4];
+  const x=Math.max(0,Math.min(1,tip.x)),y=Math.max(0,Math.min(1,tip.y));
+  const px=x*rect.width,py=y*rect.height;
+  handCursor.style.display="block";handCursor.style.left=px+"px";handCursor.style.top=py+"px";
+  const distance=Math.hypot(tip.x-thumb.x,tip.y-thumb.y);
+  const pinching=distance<0.055;
+  handCursor.classList.toggle("pinching",pinching);
+  if(pinching&&!pinchWasDown){
+   const targetRect=vrTarget.getBoundingClientRect();
+   const sx=rect.left+px,sy=rect.top+py;
+   if(sx>=targetRect.left&&sx<=targetRect.right&&sy>=targetRect.top&&sy<=targetRect.bottom){vrTarget.click();toast("Pinça reconhecida!")}
+  }
+  pinchWasDown=pinching;
+ }
+};
+vrTarget.onclick=()=>{vrTarget.classList.add("activated");vrTarget.textContent="SELECIONADO ✓";setTimeout(()=>{vrTarget.classList.remove("activated");vrTarget.textContent="TOQUE COM PINÇA"},1200)};
+
+
+// OpenVR 3D lobby and multi-view object capture prototype
+const capturePanel=$("capturePanel"),videoInput=$("objectVideo"),captureVideo=$("captureVideo");
+const captureProgress=$("captureProgress"),captureFrames=$("captureFrames"),addCaptured=$("addCapturedObject");
+let sampledFrames=[],capturedVideoUrl=null;
+$("openCapture").onclick=()=>{capturePanel.classList.add("visible");capturePanel.scrollIntoView({behavior:"smooth",block:"nearest"})};
+$("closeCapture").onclick=()=>capturePanel.classList.remove("visible");
+videoInput.onchange=async()=>{
+ const file=videoInput.files&&videoInput.files[0];if(!file)return;
+ if(!file.type.startsWith("video/")){captureProgress.textContent="Escolha um arquivo de vídeo.";return}
+ if(capturedVideoUrl)URL.revokeObjectURL(capturedVideoUrl);
+ capturedVideoUrl=URL.createObjectURL(file);captureVideo.src=capturedVideoUrl;captureVideo.hidden=false;
+ captureProgress.textContent="Lendo vídeo e extraindo diferentes ângulos...";
+ captureFrames.replaceChildren();sampledFrames=[];addCaptured.disabled=true;
+ try{
+  await new Promise((resolve,reject)=>{captureVideo.onloadedmetadata=resolve;captureVideo.onerror=reject});
+  const duration=captureVideo.duration;if(!Number.isFinite(duration)||duration<1)throw Error("Vídeo muito curto ou inválido.");
+  const count=Math.min(12,Math.max(5,Math.ceil(duration/1.4)));
+  const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
+  canvas.width=240;canvas.height=160;
+  for(let i=0;i<count;i++){
+   const time=Math.min(Math.max(0.05,duration*(i/(count-1))),Math.max(.05,duration-.05));
+   await new Promise((resolve,reject)=>{captureVideo.onseeked=resolve;captureVideo.onerror=reject;captureVideo.currentTime=time});
+   ctx.fillStyle="#07111d";ctx.fillRect(0,0,canvas.width,canvas.height);
+   const scale=Math.min(canvas.width/captureVideo.videoWidth,canvas.height/captureVideo.videoHeight);
+   const w=captureVideo.videoWidth*scale,h=captureVideo.videoHeight*scale;
+   ctx.drawImage(captureVideo,(canvas.width-w)/2,(canvas.height-h)/2,w,h);
+   const data=canvas.toDataURL("image/jpeg",.65);sampledFrames.push(data);
+   const img=document.createElement("img");img.src=data;img.alt="Quadro "+(i+1);captureFrames.append(img);
+  }
+  captureProgress.textContent=sampledFrames.length+" quadros extraídos de "+Math.round(duration)+" segundos. Confira se o objeto aparece de vários lados.";
+  addCaptured.disabled=false;
+ }catch(e){captureProgress.textContent="Não foi possível processar o vídeo: "+e.message}
+};
+addCaptured.onclick=()=>{
+ if(!sampledFrames.length)return;
+ const name=$("objectName").value.trim()||"Objeto capturado";
+ const card=document.createElement("button");card.className="captured-object";card.type="button";
+ const img=document.createElement("img");img.src=sampledFrames[Math.floor(sampledFrames.length/2)];img.alt="";
+ const label=document.createElement("span");label.textContent=name;
+ card.append(img,label);$("capturedLobbyObjects").append(card);
+ card.onclick=()=>{const idx=sampledFrames.indexOf(img.src);if(idx>=0)img.src=sampledFrames[(idx+1)%sampledFrames.length]};
+ $("lobbyCube").classList.add("captured-cube");
+ toast("Prévia adicionada ao lobby");
+ capturePanel.classList.remove("visible");
+};
