@@ -24,13 +24,14 @@
 <button class="mode-choice" id="modeHeadset" aria-pressed="false"><b>◉</b><span>Óculos personalizado</span><small>Duas lentes circulares</small></button>
 </div>
 <div id="vrStage" class="vr-stage normal-mode">
-<div class="vr-world normal-world"><div class="vr-horizon"></div><div class="vr-moon"></div><div class="vr-platform"></div><div class="vr-world-label">OPENVR <small>VIRTUAL SPACE</small></div></div>
+<div id="handCursor" class="hand-cursor" aria-hidden="true"></div><button id="vrTarget" class="vr-target" type="button">TOQUE COM PINÇA</button><div class="vr-world normal-world"><div class="vr-horizon"></div><div class="vr-moon"></div><div class="vr-platform"></div><div class="vr-world-label">OPENVR <small>VIRTUAL SPACE</small></div></div>
 <div class="lens-pair" aria-label="Visualização para lente esquerda e direita">
 <div class="lens"><div class="vr-world"><div class="vr-horizon"></div><div class="vr-moon"></div><div class="vr-platform"></div><div class="vr-world-label">OPENVR</div></div></div>
 <div class="lens"><div class="vr-world right-eye"><div class="vr-horizon"></div><div class="vr-moon"></div><div class="vr-platform"></div><div class="vr-world-label">OPENVR</div></div></div>
 </div>
 </div>
-<div class="viewer-controls"><button class="primary" id="enterFullscreen">⛶ Tela cheia</button><button class="secondary" id="exitViewer">Sair do visualizador</button></div>
+<div class="viewer-controls"><button class="primary" id="enterFullscreen">⛶ Tela cheia</button><button class="secondary" id="handToggle">✋ Ativar mãos</button><button class="secondary" id="exitViewer">Sair do visualizador</button></div>
+<p class="viewer-note" id="handStatus" role="status" aria-live="polite">Reconhecimento de mãos desligado. No aplicativo Android, ative para permitir o uso da câmera frontal.</p>
 <p class="viewer-note" id="viewerNote">Modo normal: imagem em tela inteira. Escolha Óculos personalizado para usar um visor com duas lentes.</p>
 </section>
 <section class="page" id="apps"><div class="intro"><p class="eyebrow">BIBLIOTECA</p><h1>Aplicativos</h1><p class="muted">Um espaço para suas experiências OpenVR.</p></div><div class="apps">
@@ -40,7 +41,7 @@
 <article><div class="art pink">⌘</div><h3>Party</h3><p>Encontre amigos em uma sala.</p><button class="link" data-open="party">Abrir Party →</button></article></div></section>
 <section class="page" id="learn"><div class="intro"><p class="eyebrow">PRIMEIROS PASSOS</p><h1>Aprender VR</h1><p class="muted">Um guia rápido para entender a experiência.</p></div><div class="lessons">
 <article><b>01</b><div><h3>Prepare seu celular</h3><p>Use um suporte compatível com seu aparelho e confira se ele está firme antes de iniciar uma experiência.</p></div></article>
-<article><b>02</b><div><h3>Entenda os controles</h3><p>Rastreamento de mãos e gestos ainda não estão ativos nesta versão; serão integrados no módulo Android.</p></div></article>
+<article><b>02</b><div><h3>Entenda os controles</h3><p>Ative Reconhecimento de mãos no visualizador. Mostre a mão para mover o cursor e junte polegar e indicador para selecionar o alvo.</p></div></article>
 <article><b>03</b><div><h3>Convide seus amigos</h3><p>Abra Party, crie uma sala e compartilhe o código com seus amigos.</p></div></article></div></section>
 <section class="page" id="party"><div class="intro"><p class="eyebrow">JOGUE JUNTO</p><h1>Party</h1><p class="muted">Crie uma sala ou entre usando o código de um amigo.</p></div><div class="party-layout">
 <div class="panel"><div class="symbol">⌘</div><h2>Entrar na diversão</h2><label for="playerName">Seu nome</label><input id="playerName" maxlength="20" placeholder="Como devemos te chamar?"><button class="primary wide" id="create">＋ Criar Party</button><div class="or">OU ENTRE COM UM CÓDIGO</div><label for="partyCode">Código da sala</label><input id="partyCode" maxlength="12" placeholder="Ex.: A1B2C3"><button class="secondary wide" id="join">Entrar na Party</button><p class="helper" id="partyMessage">A conexão será testada ao criar ou entrar.</p></div>
@@ -49,7 +50,7 @@
 <div class="setting"><div><b>Nome de jogador</b><p>Como seu nome aparece nas Parties.</p></div><input id="settingsName" maxlength="20" placeholder="Jogador"></div>
 <div class="setting"><div><b>Servidor de Party</b><p>Endereço da API multiplayer.</p></div><input id="serverUrl" type="url" spellcheck="false"></div>
 <div class="setting"><div><b>Testar conexão</b><p>Verifica se o servidor responde.</p></div><button class="secondary" id="test">Testar</button></div><p class="helper" id="settingsMessage">O servidor padrão ainda precisa ser validado.</p></div>
-<div class="notice"><b>ⓘ</b><div><strong>Recursos ainda não disponíveis</strong><p>ARCore, câmera, rastreamento de mãos, áudio espacial e renderização VR precisam de desenvolvimento Android nativo.</p></div></div></section>
+<div class="notice"><b>ⓘ</b><div><strong>Recursos ainda não disponíveis</strong><p>A câmera frontal e o reconhecimento de mãos usam o módulo Android. Estereoscopia 3D real, ARCore, áudio espacial e head tracking ainda estão em desenvolvimento.</p></div></div></section>
 </main>
 <nav><button class="selected" data-page="home"><span>⌂</span>Início</button><button data-page="apps"><span>▦</span>Apps</button><button data-page="learn"><span>✧</span>Aprender</button><button data-page="party"><span>⌘</span>Party</button><button data-page="settings"><span>⚙</span>Ajustes</button></nav><div id="toast" class="toast"></div>
 <script src="./app.js"></script>
